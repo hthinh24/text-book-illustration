@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: text-book-illustration
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+
+server:
+  port: ${SERVER_PORT}
+
+gemini:
+  api-key: ${GEMINI_API_KEY}
+  text-model: ${GEMINI_TEXT_MODEL}
+  image-model: ${GEMINI_IMAGE_MODEL}
+
+app:
+  file-storage-root: ${FILE_STORAGE_ROOT}
+  step-timeout-seconds: ${STEP_TIMEOUT_SECONDS}
+  max-retry-count: ${MAX_RETRY_COUNT}
