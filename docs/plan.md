@@ -36,3 +36,23 @@ POST /api/v1/{project_id}/chapters
 
 POST /api/v1/{project_id}/illustrations
     - update step = illustrations, step_status = SUCCESS, previous_interaction_id = interaction_id
+
+Key queries:
+Condition update (claim resource):
+    UPDATE project SET step='<step_name>', step_status='RUNNING', started_at=now()
+    WHERE id=? AND (
+    (step='<prev_step_name>' AND step_status='DONE')      -- case 1: advance from prev_step
+    OR
+    (step='<step_name>' AND step_status='PENDING') -- case 2: retry
+    )
+
+For any step:
+Success:
+    UPDATE project
+    SET step_status = 'DONE', previous_interaction_id = ?
+    WHERE id = ? AND step = ? AND step_status = 'RUNNING'
+
+ERROR:
+    UPDATE project
+    SET step_status = 'FAIL', error_message = ?
+    WHERE id = ? AND step = ? AND step_status = 'RUNNING'
