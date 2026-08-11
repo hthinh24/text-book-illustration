@@ -2,9 +2,9 @@
 - User
 
 step_state (null, style, character, portrait, chapter, illustrations)
-step_status (PENDING, FAIL, DONE)
+step_status (PENDING, RUNNING, FAIL, DONE)
 status (draft, in_progress, done)
-- Project (id, book, style, status, step_state, step_status, retry_count, previous_interaction_id) ,
+- Project (id, book, style, status, step_state, step_status, retry_count, error_message, previous_interaction_id, created_at, started_at),
 - Character, Project_Character ,
 - Chapter, Chapter_Character,
 
