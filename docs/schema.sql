@@ -3,6 +3,7 @@
 CREATE TYPE step AS ENUM ('STYLE', 'CHARACTER', 'PORTRAIT', 'CHAPTER', 'ILLUSTRATION');
 CREATE TYPE step_status AS ENUM ('PENDING', 'RUNNING', 'FAIL', 'SUCCESS');
 CREATE TYPE project_status AS ENUM ('DRAFT', 'IN_PROGRESS', 'DONE');
+CREATE TYPE item_status AS ENUM ('PENDING', 'RUNNING', 'DONE', 'FAIL');
 
 CREATE TABLE "user" (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -30,16 +31,18 @@ CREATE TABLE project (
 CREATE TABLE character (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id UUID NOT NULL REFERENCES project(id),
-    name TEXT NOT NULL,
+    name TEXT,                                        -- nullable: populated at CHARACTER step
     image_prompt TEXT,
-    portrait_image_path TEXT
+    portrait_image_path TEXT,
+    status item_status NOT NULL DEFAULT 'PENDING'
 );
 
 CREATE TABLE chapter (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id UUID NOT NULL REFERENCES project(id),
     illustration_prompt TEXT,
-    illustration_image_path TEXT
+    illustration_image_path TEXT,
+    status item_status NOT NULL DEFAULT 'PENDING'
 );
 
 CREATE TABLE character_chapter (
@@ -47,3 +50,4 @@ CREATE TABLE character_chapter (
     chapter_id UUID NOT NULL REFERENCES chapter(id),
     PRIMARY KEY (character_id, chapter_id)
 );
+
