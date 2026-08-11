@@ -1,0 +1,10 @@
+# IDEA #
+.idea/
+.vscode
+
+# Env #
+.env
+
+bin
+
+target
