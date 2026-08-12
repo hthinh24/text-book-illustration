@@ -12,3 +12,8 @@ Cost: Lost audit per-step, can accepted because we didn`t really need in this ti
 Agent use hibernate.ddl-auto=update for fast auto-generating and altering DB schema directly from Java entities. 
 I push back and force ddl-auto=validate with Flyway because it give us more safety control on schema that can prevent implicit schema drifts, orphan columns.
 Cost: Need to maintain migration scripts for every entity change.
+
+4. Abort-early on first item FAIL
+Claude recommend continue run for remaining items after first item fail because cap character is 2 that can help user reduce their round trip.
+I push back because currently why only use one model per text / image generation, single model per type mean share failure mode, for ex: If the first item fail because rate limit, out of quote, model downing then the next item almost certainly will hit the same error, keep continue didn`t bring any value.
+Cost: worse UX for case that can be success, the user gets a partial result instead of a full one in a single round trip. If item #1 fails (For ex: timeout) but item #2 would have actually succeeded, aborting early mean the user has to retry instead of getting both outcomes at once.
