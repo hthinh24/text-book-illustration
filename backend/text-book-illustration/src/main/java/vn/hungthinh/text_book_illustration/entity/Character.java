@@ -46,7 +46,7 @@ public class Character {
 
     @Enumerated(EnumType.STRING)
     @JdbcType(PostgreSQLEnumJdbcType.class)
-    @Column(nullable = false)
+    @Column(name = "status", nullable = false, columnDefinition = "item_status")
     private ItemStatus status = ItemStatus.PENDING;
 
     @ManyToMany(fetch = FetchType.LAZY)

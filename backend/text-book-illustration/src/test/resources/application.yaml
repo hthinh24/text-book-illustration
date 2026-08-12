@@ -1,0 +1,19 @@
+app:
+  file-storage-root: /tmp/test-storage
+  step-timeout-seconds: 180
+  max-retry-count: 3
+
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+
+gemini:
+  api-key: stub-key
+  text-model: stub-text
+  image-model: stub-image

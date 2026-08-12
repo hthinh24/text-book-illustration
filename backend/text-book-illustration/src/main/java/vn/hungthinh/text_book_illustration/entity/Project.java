@@ -50,17 +50,17 @@ public class Project implements Persistable<UUID> {
 
     @Enumerated(EnumType.STRING)
     @JdbcType(PostgreSQLEnumJdbcType.class)
-    @Column(nullable = false)
+    @Column(name = "status", nullable = false, columnDefinition = "project_status")
     private ProjectStatus status = ProjectStatus.DRAFT;
 
     @Enumerated(EnumType.STRING)
     @JdbcType(PostgreSQLEnumJdbcType.class)
-    @Column(nullable = false)
+    @Column(name = "step", nullable = false, columnDefinition = "step")
     private Step step = Step.STYLE;
 
     @Enumerated(EnumType.STRING)
     @JdbcType(PostgreSQLEnumJdbcType.class)
-    @Column(nullable = false)
+    @Column(name = "step_status", nullable = false, columnDefinition = "step_status")
     private StepStatus stepStatus = StepStatus.PENDING;
 
     @Column(nullable = false)
