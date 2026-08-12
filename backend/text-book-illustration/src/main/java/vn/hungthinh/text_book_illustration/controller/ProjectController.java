@@ -19,14 +19,14 @@ import vn.hungthinh.text_book_illustration.dto.response.ProjectSummaryResponse;
 import vn.hungthinh.text_book_illustration.service.ProjectService;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/projects")
 @RequiredArgsConstructor
 public class ProjectController {
 
     private final ProjectService projectService;
 
     /**
-     * POST /api/v1/init-project  (multipart/form-data)
+     * POST /api/v1/projects/init-project  (multipart/form-data)
      * Fields: userId (UUID), title (String), text (String, optional), file (.txt, optional)
      * Exactly one of text/file must be present — enforced in the service layer.
      */
@@ -42,13 +42,13 @@ public class ProjectController {
     /**
      * GET /api/v1/projects?userId={id}
      */
-    @GetMapping("/projects")
+    @GetMapping("")
     public ResponseEntity<List<ProjectSummaryResponse>> listProjects(@RequestParam UUID userId) {
         return ResponseEntity.ok(projectService.listProjects(userId));
     }
 
     /**
-     * GET /api/v1/{project_id}
+     * GET /api/v1/projects/{project_id}
      */
     @GetMapping("/{projectId}")
     public ResponseEntity<ProjectDetailResponse> getProject(@PathVariable UUID projectId) {
@@ -56,10 +56,10 @@ public class ProjectController {
     }
 
     /**
-     * GET /api/v1/files/{project_id}/book-text
+     * GET /api/v1/projects/{project_id}/files/book-text
      * Returns the raw UTF-8 content of the uploaded book text.
      */
-    @GetMapping(value = "/files/{projectId}/book-text", produces = MediaType.TEXT_PLAIN_VALUE)
+    @GetMapping(value = "/{projectId}/files/book-text", produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<String> getBookText(@PathVariable UUID projectId) {
         return ResponseEntity.ok(projectService.getBookText(projectId));
     }
