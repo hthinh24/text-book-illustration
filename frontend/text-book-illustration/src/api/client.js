@@ -51,3 +51,25 @@ export async function postIdentity({ email, name }) {
     body: JSON.stringify({ email, name }),
   });
 }
+
+export async function getProjects(userId) {
+  return await request(`/projects?userId=${encodeURIComponent(userId)}`, {
+    method: 'GET',
+  });
+}
+
+export async function initProject({ userId, title, text, file }) {
+  const formData = new FormData();
+  formData.append('userId', userId);
+  formData.append('title', title);
+  if (file) {
+    formData.append('file', file);
+  } else if (text) {
+    formData.append('text', text);
+  }
+
+  return await request('/projects/init-project', {
+    method: 'POST',
+    body: formData,
+  });
+}

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState } from 'react';
 import { postIdentity } from '../api/client';
 
-const AuthContext = createContext(null);
+export const AuthContext = createContext(null);
 const STORAGE_KEY = 'gd_user';
 
 export function AuthProvider({ children }) {
