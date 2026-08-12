@@ -5,6 +5,8 @@ import java.util.UUID;
 
 import jakarta.persistence.*;
 
+import org.hibernate.annotations.JdbcType;
+import org.hibernate.dialect.type.PostgreSQLEnumJdbcType;
 import org.springframework.data.domain.Persistable;
 
 import lombok.Getter;
@@ -47,14 +49,17 @@ public class Project implements Persistable<UUID> {
     private String style;
 
     @Enumerated(EnumType.STRING)
+    @JdbcType(PostgreSQLEnumJdbcType.class)
     @Column(nullable = false)
     private ProjectStatus status = ProjectStatus.DRAFT;
 
     @Enumerated(EnumType.STRING)
+    @JdbcType(PostgreSQLEnumJdbcType.class)
     @Column(nullable = false)
     private Step step = Step.STYLE;
 
     @Enumerated(EnumType.STRING)
+    @JdbcType(PostgreSQLEnumJdbcType.class)
     @Column(nullable = false)
     private StepStatus stepStatus = StepStatus.PENDING;
 
