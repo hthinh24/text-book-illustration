@@ -32,7 +32,7 @@ class IdentityControllerTest {
     void identity_happyPath_returns200WithUserIdAndName() throws Exception {
         UUID userId = UUID.randomUUID();
         when(identityService.getOrCreate(any(IdentityRequest.class)))
-                .thenReturn(new IdentityResponse(userId, "Alice"));
+                .thenReturn(new IdentityResponse(userId, "alice@gmail.com", "Alice"));
 
         mockMvc.perform(post("/api/v1/identity")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -40,7 +40,8 @@ class IdentityControllerTest {
                                 { "email": "alice@example.com", "name": "Alice" }
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.userId").value(userId.toString()))
+               .andExpect(jsonPath("$.userId").value(userId.toString()))
+               .andExpect(jsonPath("$.email").value("alice@gmail.com"))
                 .andExpect(jsonPath("$.name").value("Alice"));
     }
 

@@ -18,13 +18,13 @@ public class IdentityService {
     @Transactional
     public IdentityResponse getOrCreate(IdentityRequest request) {
         return userRepository.findByEmail(request.email())
-                .map(existing -> new IdentityResponse(existing.getId(), existing.getName()))
+                .map(existing -> new IdentityResponse(existing.getId(), existing.getEmail(), existing.getName()))
                 .orElseGet(() -> {
                     User user = new User();
                     user.setEmail(request.email());
                     user.setName(request.name());
                     User saved = userRepository.save(user);
-                    return new IdentityResponse(saved.getId(), saved.getName());
+                    return new IdentityResponse(saved.getId(), saved.getEmail(), saved.getName());
                 });
     }
 }
