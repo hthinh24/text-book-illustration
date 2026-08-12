@@ -45,30 +45,19 @@ describe('ProjectListPage', () => {
     expect(getProjects).toHaveBeenCalledWith('user-uuid-123');
   });
 
-  it('renders project list items with correct status pills and segments', async () => {
+  it('renders project list items with correct status pills and progress segments', async () => {
     getProjects.mockResolvedValueOnce([
-      {
-        projectId: 'proj-1',
-        title: 'Alice in Wonderland',
-        createdAt: '2026-08-10T10:00:00Z',
-        status: 'DRAFT',
-        step: 'STYLE',
-        stepStatus: 'PENDING',
-      },
-      {
-        projectId: 'proj-2',
-        title: 'Peter Pan',
-        createdAt: '2026-08-11T12:00:00Z',
-        status: 'DONE',
-        step: 'ILLUSTRATION',
-        stepStatus: 'SUCCESS',
-      },
+      { projectId: 'proj-1', title: 'Alice in Wonderland', createdAt: '2026-08-10T10:00:00Z', status: 'DRAFT', step: 'STYLE', stepStatus: 'PENDING' },
+      { projectId: 'proj-2', title: 'Peter Pan', createdAt: '2026-08-11T12:00:00Z', status: 'DONE', step: 'ILLUSTRATION', stepStatus: 'SUCCESS' },
     ]);
 
     renderProjectListPage();
 
-    expect(await screen.findByText('Alice in Wonderland')).toBeInTheDocument();
-    expect(screen.getByText('Peter Pan')).toBeInTheDocument();
+    const aliceRow = (await screen.findByText('Alice in Wonderland')).closest('.project-row');
+    const peterRow = screen.getByText('Peter Pan').closest('.project-row');
+
+    expect(aliceRow.querySelectorAll('.progress-segment.filled')).toHaveLength(0);
+    expect(peterRow.querySelectorAll('.progress-segment.filled')).toHaveLength(5);
     expect(screen.getByText('Draft')).toBeInTheDocument();
     expect(screen.getByText('Done')).toBeInTheDocument();
   });
