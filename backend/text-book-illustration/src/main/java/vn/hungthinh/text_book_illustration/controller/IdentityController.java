@@ -1,5 +1,6 @@
 package vn.hungthinh.text_book_illustration.controller;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +18,7 @@ import vn.hungthinh.text_book_illustration.service.IdentityService;
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
 @Validated
+@Slf4j
 public class IdentityController {
 
     private final IdentityService identityService;
@@ -29,6 +31,8 @@ public class IdentityController {
      */
     @PostMapping("/identity")
     public ResponseEntity<IdentityResponse> identity(@Valid @RequestBody IdentityRequest request) {
+        log.info("[Controller] identity called: email={}", request.email());
         return ResponseEntity.ok(identityService.getOrCreate(request));
     }
 }
+

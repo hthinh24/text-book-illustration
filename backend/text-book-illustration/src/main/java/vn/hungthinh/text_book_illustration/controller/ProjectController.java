@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import vn.hungthinh.text_book_illustration.dto.response.ProjectDetailResponse;
 import vn.hungthinh.text_book_illustration.dto.response.ProjectSummaryResponse;
 import vn.hungthinh.text_book_illustration.service.ProjectService;
@@ -21,6 +22,7 @@ import vn.hungthinh.text_book_illustration.service.ProjectService;
 @RestController
 @RequestMapping("/api/v1/projects")
 @RequiredArgsConstructor
+@Slf4j
 public class ProjectController {
 
     private final ProjectService projectService;
@@ -36,6 +38,8 @@ public class ProjectController {
             @RequestParam String title,
             @RequestParam(required = false) String text,
             @RequestParam(required = false) MultipartFile file) {
+        log.info("[Controller] initProject called: userId={}, title={}, hasText={}, hasFile={}",
+                userId, title, text != null && !text.isBlank(), file != null && !file.isEmpty());
         return ResponseEntity.ok(projectService.initProject(userId, title, text, file));
     }
 
@@ -44,6 +48,7 @@ public class ProjectController {
      */
     @GetMapping("")
     public ResponseEntity<List<ProjectSummaryResponse>> listProjects(@RequestParam UUID userId) {
+        log.info("[Controller] listProjects called: userId={}", userId);
         return ResponseEntity.ok(projectService.listProjects(userId));
     }
 
@@ -52,6 +57,7 @@ public class ProjectController {
      */
     @GetMapping("/{projectId}")
     public ResponseEntity<ProjectDetailResponse> getProject(@PathVariable UUID projectId) {
+        log.info("[Controller] getProject called: projectId={}", projectId);
         return ResponseEntity.ok(projectService.getProject(projectId));
     }
 
@@ -61,6 +67,7 @@ public class ProjectController {
      */
     @GetMapping(value = "/{projectId}/files/book-text", produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<String> getBookText(@PathVariable UUID projectId) {
+        log.info("[Controller] getBookText called: projectId={}", projectId);
         return ResponseEntity.ok(projectService.getBookText(projectId));
     }
 }

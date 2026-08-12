@@ -85,10 +85,34 @@ Any new endpoint that returns project state should return this same shape, not a
 5. Real decisions get written into `DECISIONS.md` close to when they're made, not backfilled at the end.
 6. If a task brief hits a genuinely undecided edge case, the agent should ask rather than guess — briefs will flag known open questions explicitly.
 
+## Logging conventions
+
+Strict manual logging rules across Controller and Service layers (do NOT use AOP):
+
+1. **Controller layer:**
+   - Single `log.info` line right at entry (action name + key parameters/IDs).
+   - Prefix tag: `[Controller]`
+   - Do NOT log at method exit (avoid duplicating service-layer results/HTTP status).
+
+2. **Service layer:**
+   - Log at entry (action start + inputs) and before every return path/branch.
+   - Prefix tag: `[Service]`
+   - If a method has multiple return paths (e.g. claim failures, early returns), log each path explicitly.
+
+3. **State transitions & branching:**
+   - Log state changes explicitly with `fromStatus → toStatus`, `projectId`, `step`, and item info if multi-item.
+   - Failed claim branches MUST log which of the 3 cases applied (`already SUCCESS` / `currently RUNNING` / `wrong order`).
+
+4. **Exceptions:**
+   - Every `catch (Exception e)` block MUST log with `log.error` including full business context (`projectId`, `step`, item details) and pass `e` as the last parameter so the logging framework prints the full stack trace.
+   - Never log bare exceptions without business context.
+
 ## Status
 
 - Task 04 (Identity + Project CRUD) — done, tested via Postman, all passing.
-- Task 05 (pipeline state machine) — next up, see `task-05-pipeline-state-machine.md`.
-- Task 06 (real Gemini REST client) — not started; Task 05 stubs the Gemini call so this can slot in later without touching the state machine.
+- Task 05 (pipeline state machine) — done, state machine & retry endpoints implemented & tested.
+- Task Logging Refactor — done, applied logging conventions across controllers/services and documented in AGENT.md.
+- Task 06 (real Gemini REST client) — next up.
 
 *This file is expected to evolve as the project progresses — update it when a new convention, gotcha, or structural decision gets locked in, not just at the start.*
+

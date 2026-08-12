@@ -28,9 +28,9 @@ import vn.hungthinh.text_book_illustration.repository.ChapterRepository;
 import vn.hungthinh.text_book_illustration.repository.CharacterRepository;
 import vn.hungthinh.text_book_illustration.repository.ProjectRepository;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PipelineService {
 
     private final ProjectRepository projectRepository;
@@ -44,6 +44,9 @@ public class PipelineService {
     // ------------------------------------------------------------------ //
 
     public ProjectDetailResponse triggerStyle(UUID projectId, StyleRequest request) {
+        boolean hasUserStyle = request != null && request.hasUserStyle();
+        log.info("[Service] Starting triggerStyle: projectId={}, hasUserStyle={}", projectId, hasUserStyle);
+
         int rows = projectRepository.claimStyleStep(
                 projectId, Instant.now(),
                 StepStatus.RUNNING, StepStatus.PENDING, Step.STYLE);
@@ -52,28 +55,34 @@ public class PipelineService {
             return handleClaimFailure(projectId, Step.STYLE);
         }
 
-        if (request != null && request.hasUserStyle()) {
+        log.info("[Service] status PENDING → RUNNING: projectId={}, step=STYLE", projectId);
+
+        if (hasUserStyle) {
             // No external call — finalize inline; still returns 202 per spec
             finalizeStyleSuccess(projectId, request.style(), "user-supplied");
         } else {
             executeStyleAsync(projectId);
         }
 
-        return toDetail(findProjectOrThrow(projectId));
+        ProjectDetailResponse result = toDetail(findProjectOrThrow(projectId));
+        log.info("[Service] Finished triggerStyle claim: projectId={}, stepStatus={}", projectId, result.stepStatus());
+        return result;
     }
 
     @Async
     public void executeStyleAsync(UUID projectId) {
+        log.info("[Service] Starting executeStyleAsync: projectId={}", projectId);
         Project project = findProjectOrThrow(projectId);
         try {
             String bookText = readBookText(project);
             GeminiClient.Result<String> result = geminiClient.generateStyle(bookText, project.getPreviousInteractionId());
             finalizeStyleSuccess(projectId, result.value(), result.interactionId());
         } catch (Exception e) {
-            log.error("STYLE step failed for project {}: {}", projectId, e.getMessage(), e);
+            log.error("[Service] STYLE step failed: projectId={}, step=STYLE, error={}", projectId, e.getMessage(), e);
             projectRepository.finalizeStepFail(
                     projectId, Step.STYLE, e.getMessage(),
                     StepStatus.FAIL, StepStatus.RUNNING);
+            log.error("[Service] status RUNNING → FAIL: projectId={}, step=STYLE, error={}", projectId, e.getMessage());
         }
     }
 
@@ -87,6 +96,7 @@ public class PipelineService {
         project.setStyle(style);
         project.setStatus(ProjectStatus.IN_PROGRESS);
         projectRepository.save(project);
+        log.info("[Service] status RUNNING → SUCCESS: projectId={}, step=STYLE, interactionId={}", projectId, interactionId);
     }
 
     // ------------------------------------------------------------------ //
@@ -94,6 +104,8 @@ public class PipelineService {
     // ------------------------------------------------------------------ //
 
     public ProjectDetailResponse triggerCharacter(UUID projectId) {
+        log.info("[Service] Starting triggerCharacter: projectId={}", projectId);
+
         int rows = projectRepository.claimStep(
                 projectId, Step.STYLE, Step.CHARACTER, Instant.now(),
                 StepStatus.RUNNING, StepStatus.SUCCESS, StepStatus.PENDING);
@@ -101,12 +113,17 @@ public class PipelineService {
         if (rows == 0) {
             return handleClaimFailure(projectId, Step.CHARACTER);
         }
+
+        log.info("[Service] status PENDING/SUCCESS → RUNNING: projectId={}, step=CHARACTER", projectId);
         executeCharacterAsync(projectId);
-        return toDetail(findProjectOrThrow(projectId));
+        ProjectDetailResponse result = toDetail(findProjectOrThrow(projectId));
+        log.info("[Service] Finished triggerCharacter claim: projectId={}, stepStatus={}", projectId, result.stepStatus());
+        return result;
     }
 
     @Async
     public void executeCharacterAsync(UUID projectId) {
+        log.info("[Service] Starting executeCharacterAsync: projectId={}", projectId);
         Project project = findProjectOrThrow(projectId);
         try {
             String bookText = readBookText(project);
@@ -123,16 +140,19 @@ public class PipelineService {
                 character.setImagePrompt(data.imagePrompt());
                 character.setStatus(ItemStatus.TEXT_GENERATED);
                 characterRepository.save(character);
+                log.info("[Service] Created character: projectId={}, characterName={}", projectId, data.name());
             }
 
             projectRepository.finalizeStepSuccess(
                     projectId, Step.CHARACTER, result.interactionId(),
                     StepStatus.SUCCESS, StepStatus.RUNNING);
+            log.info("[Service] status RUNNING → SUCCESS: projectId={}, step=CHARACTER, characterCount={}", projectId, chars.size());
         } catch (Exception e) {
-            log.error("CHARACTER step failed for project {}: {}", projectId, e.getMessage(), e);
+            log.error("[Service] CHARACTER step failed: projectId={}, step=CHARACTER, error={}", projectId, e.getMessage(), e);
             projectRepository.finalizeStepFail(
                     projectId, Step.CHARACTER, e.getMessage(),
                     StepStatus.FAIL, StepStatus.RUNNING);
+            log.error("[Service] status RUNNING → FAIL: projectId={}, step=CHARACTER, error={}", projectId, e.getMessage());
         }
     }
 
@@ -141,6 +161,8 @@ public class PipelineService {
     // ------------------------------------------------------------------ //
 
     public ProjectDetailResponse triggerPortraits(UUID projectId) {
+        log.info("[Service] Starting triggerPortraits: projectId={}", projectId);
+
         int rows = projectRepository.claimStep(
                 projectId, Step.CHARACTER, Step.PORTRAIT, Instant.now(),
                 StepStatus.RUNNING, StepStatus.SUCCESS, StepStatus.PENDING);
@@ -148,12 +170,17 @@ public class PipelineService {
         if (rows == 0) {
             return handleClaimFailure(projectId, Step.PORTRAIT);
         }
+
+        log.info("[Service] status PENDING/SUCCESS → RUNNING: projectId={}, step=PORTRAIT", projectId);
         executePortraitsAsync(projectId);
-        return toDetail(findProjectOrThrow(projectId));
+        ProjectDetailResponse result = toDetail(findProjectOrThrow(projectId));
+        log.info("[Service] Finished triggerPortraits claim: projectId={}, stepStatus={}", projectId, result.stepStatus());
+        return result;
     }
 
     @Async
     public void executePortraitsAsync(UUID projectId) {
+        log.info("[Service] Starting executePortraitsAsync: projectId={}", projectId);
         Project project = findProjectOrThrow(projectId);
         List<Character> characters = characterRepository.findByProjectOrderById(project);
         String lastInteractionId = project.getPreviousInteractionId();
@@ -161,10 +188,15 @@ public class PipelineService {
 
         for (Character character : characters) {
             if (character.getStatus() == ItemStatus.DONE) {
+                log.info("[Service] Skipping character portrait (already DONE): projectId={}, characterId={}, characterName={}",
+                        projectId, character.getId(), character.getName());
                 continue; // Skip already-done items on retry
             }
 
             characterRepository.updateStatus(character.getId(), ItemStatus.RUNNING);
+            log.info("[Service] status item PENDING → RUNNING: projectId={}, step=PORTRAIT, characterId={}, characterName={}",
+                    projectId, character.getId(), character.getName());
+
             try {
                 GeminiClient.Result<String> result = geminiClient.generatePortrait(
                         character.getName(),
@@ -173,9 +205,11 @@ public class PipelineService {
 
                 characterRepository.updatePortraitDone(character.getId(), result.value(), ItemStatus.DONE);
                 lastInteractionId = result.interactionId();
+                log.info("[Service] status item RUNNING → DONE: projectId={}, step=PORTRAIT, characterId={}, characterName={}",
+                        projectId, character.getId(), character.getName());
             } catch (Exception e) {
-                log.error("PORTRAIT failed for character {} in project {}: {}",
-                        character.getId(), projectId, e.getMessage(), e);
+                log.error("[Service] status item RUNNING → FAIL: projectId={}, step=PORTRAIT, characterId={}, characterName={}, error={}",
+                        projectId, character.getId(), character.getName(), e.getMessage(), e);
                 characterRepository.updateStatus(character.getId(), ItemStatus.FAIL);
                 failMessage = "Portrait generation failed for character '"
                         + character.getName() + "': " + e.getMessage();
@@ -187,10 +221,12 @@ public class PipelineService {
             projectRepository.finalizeStepFail(
                     projectId, Step.PORTRAIT, failMessage,
                     StepStatus.FAIL, StepStatus.RUNNING);
+            log.error("[Service] status RUNNING → FAIL: projectId={}, step=PORTRAIT, error={}", projectId, failMessage);
         } else {
             projectRepository.finalizeStepSuccess(
                     projectId, Step.PORTRAIT, lastInteractionId,
                     StepStatus.SUCCESS, StepStatus.RUNNING);
+            log.info("[Service] status RUNNING → SUCCESS: projectId={}, step=PORTRAIT", projectId);
         }
     }
 
@@ -199,6 +235,8 @@ public class PipelineService {
     // ------------------------------------------------------------------ //
 
     public ProjectDetailResponse triggerChapters(UUID projectId) {
+        log.info("[Service] Starting triggerChapters: projectId={}", projectId);
+
         int rows = projectRepository.claimStep(
                 projectId, Step.PORTRAIT, Step.CHAPTER, Instant.now(),
                 StepStatus.RUNNING, StepStatus.SUCCESS, StepStatus.PENDING);
@@ -206,12 +244,17 @@ public class PipelineService {
         if (rows == 0) {
             return handleClaimFailure(projectId, Step.CHAPTER);
         }
+
+        log.info("[Service] status PENDING/SUCCESS → RUNNING: projectId={}, step=CHAPTER", projectId);
         executeChaptersAsync(projectId);
-        return toDetail(findProjectOrThrow(projectId));
+        ProjectDetailResponse result = toDetail(findProjectOrThrow(projectId));
+        log.info("[Service] Finished triggerChapters claim: projectId={}, stepStatus={}", projectId, result.stepStatus());
+        return result;
     }
 
     @Async
     public void executeChaptersAsync(UUID projectId) {
+        log.info("[Service] Starting executeChaptersAsync: projectId={}", projectId);
         Project project = findProjectOrThrow(projectId);
         try {
             String bookText = readBookText(project);
@@ -227,16 +270,19 @@ public class PipelineService {
                 chapter.setIllustrationPrompt(data.illustrationPrompt());
                 chapter.setStatus(ItemStatus.TEXT_GENERATED);
                 chapterRepository.save(chapter);
+                log.info("[Service] Created chapter: projectId={}, chapterId={}", projectId, chapter.getId());
             }
 
             projectRepository.finalizeStepSuccess(
                     projectId, Step.CHAPTER, result.interactionId(),
                     StepStatus.SUCCESS, StepStatus.RUNNING);
+            log.info("[Service] status RUNNING → SUCCESS: projectId={}, step=CHAPTER, chapterCount={}", projectId, chaps.size());
         } catch (Exception e) {
-            log.error("CHAPTER step failed for project {}: {}", projectId, e.getMessage(), e);
+            log.error("[Service] CHAPTER step failed: projectId={}, step=CHAPTER, error={}", projectId, e.getMessage(), e);
             projectRepository.finalizeStepFail(
                     projectId, Step.CHAPTER, e.getMessage(),
                     StepStatus.FAIL, StepStatus.RUNNING);
+            log.error("[Service] status RUNNING → FAIL: projectId={}, step=CHAPTER, error={}", projectId, e.getMessage());
         }
     }
 
@@ -245,6 +291,8 @@ public class PipelineService {
     // ------------------------------------------------------------------ //
 
     public ProjectDetailResponse triggerIllustrations(UUID projectId) {
+        log.info("[Service] Starting triggerIllustrations: projectId={}", projectId);
+
         int rows = projectRepository.claimStep(
                 projectId, Step.CHAPTER, Step.ILLUSTRATION, Instant.now(),
                 StepStatus.RUNNING, StepStatus.SUCCESS, StepStatus.PENDING);
@@ -252,12 +300,17 @@ public class PipelineService {
         if (rows == 0) {
             return handleClaimFailure(projectId, Step.ILLUSTRATION);
         }
+
+        log.info("[Service] status PENDING/SUCCESS → RUNNING: projectId={}, step=ILLUSTRATION", projectId);
         executeIllustrationsAsync(projectId);
-        return toDetail(findProjectOrThrow(projectId));
+        ProjectDetailResponse result = toDetail(findProjectOrThrow(projectId));
+        log.info("[Service] Finished triggerIllustrations claim: projectId={}, stepStatus={}", projectId, result.stepStatus());
+        return result;
     }
 
     @Async
     public void executeIllustrationsAsync(UUID projectId) {
+        log.info("[Service] Starting executeIllustrationsAsync: projectId={}", projectId);
         Project project = findProjectOrThrow(projectId);
         List<Chapter> chapters = chapterRepository.findByProjectOrderById(project);
         String lastInteractionId = project.getPreviousInteractionId();
@@ -265,10 +318,15 @@ public class PipelineService {
 
         for (Chapter chapter : chapters) {
             if (chapter.getStatus() == ItemStatus.DONE) {
+                log.info("[Service] Skipping chapter illustration (already DONE): projectId={}, chapterId={}",
+                        projectId, chapter.getId());
                 continue; // Skip already-done items on retry
             }
 
             chapterRepository.updateStatus(chapter.getId(), ItemStatus.RUNNING);
+            log.info("[Service] status item PENDING → RUNNING: projectId={}, step=ILLUSTRATION, chapterId={}",
+                    projectId, chapter.getId());
+
             try {
                 GeminiClient.Result<String> result = geminiClient.generateIllustration(
                         chapter.getIllustrationPrompt(),
@@ -276,9 +334,11 @@ public class PipelineService {
 
                 chapterRepository.updateIllustrationDone(chapter.getId(), result.value(), ItemStatus.DONE);
                 lastInteractionId = result.interactionId();
+                log.info("[Service] status item RUNNING → DONE: projectId={}, step=ILLUSTRATION, chapterId={}",
+                        projectId, chapter.getId());
             } catch (Exception e) {
-                log.error("ILLUSTRATION failed for chapter {} in project {}: {}",
-                        chapter.getId(), projectId, e.getMessage(), e);
+                log.error("[Service] status item RUNNING → FAIL: projectId={}, step=ILLUSTRATION, chapterId={}, error={}",
+                        projectId, chapter.getId(), e.getMessage(), e);
                 chapterRepository.updateStatus(chapter.getId(), ItemStatus.FAIL);
                 failMessage = "Illustration generation failed for chapter "
                         + chapter.getId() + ": " + e.getMessage();
@@ -290,11 +350,13 @@ public class PipelineService {
             projectRepository.finalizeStepFail(
                     projectId, Step.ILLUSTRATION, failMessage,
                     StepStatus.FAIL, StepStatus.RUNNING);
+            log.error("[Service] status RUNNING → FAIL: projectId={}, step=ILLUSTRATION, error={}", projectId, failMessage);
         } else {
             projectRepository.finalizeStepSuccess(
                     projectId, Step.ILLUSTRATION, lastInteractionId,
                     StepStatus.SUCCESS, StepStatus.RUNNING);
             projectRepository.completeProject(projectId, ProjectStatus.DONE);
+            log.info("[Service] status RUNNING → SUCCESS: projectId={}, step=ILLUSTRATION, projectStatus=DONE", projectId);
         }
     }
 
@@ -303,6 +365,7 @@ public class PipelineService {
     // ------------------------------------------------------------------ //
 
     public RetryResponse retry(UUID projectId) {
+        log.info("[Service] Starting retry: projectId={}", projectId);
         // DB is the source of truth for which step to retry — don't trust FE
         Project project = findProjectOrThrow(projectId);
         Step currentStep = project.getStep();
@@ -314,7 +377,11 @@ public class PipelineService {
                 projectId, currentStep, maxRetryCount,
                 StepStatus.PENDING, StepStatus.FAIL);
         if (failRows == 1) {
-            return new RetryResponse(toDetail(findProjectOrThrow(projectId)), "FAILED");
+            log.info("[Service] status FAIL → PENDING (retry claimed): projectId={}, step={}, reason=FAILED",
+                    projectId, currentStep);
+            RetryResponse response = new RetryResponse(toDetail(findProjectOrThrow(projectId)), "FAILED");
+            log.info("[Service] Finished retry successfully: projectId={}, reason=FAILED", projectId);
+            return response;
         }
 
         // Try stuck-RUNNING path
@@ -323,10 +390,16 @@ public class PipelineService {
                 projectId, currentStep, timeoutBefore,
                 StepStatus.PENDING, StepStatus.RUNNING);
         if (stuckRows == 1) {
-            return new RetryResponse(toDetail(findProjectOrThrow(projectId)), "STUCK_TIMEOUT");
+            log.info("[Service] status RUNNING → PENDING (stuck timeout recovered): projectId={}, step={}, reason=STUCK_TIMEOUT",
+                    projectId, currentStep);
+            RetryResponse response = new RetryResponse(toDetail(findProjectOrThrow(projectId)), "STUCK_TIMEOUT");
+            log.info("[Service] Finished retry successfully: projectId={}, reason=STUCK_TIMEOUT", projectId);
+            return response;
         }
 
         // Neither path matched — project is not in a retryable state
+        log.warn("[Service] Retry rejected (not in retryable state): projectId={}, step={}, stepStatus={}, retryCount={}",
+                projectId, currentStep, project.getStepStatus(), project.getRetryCount());
         throw new ResponseStatusException(HttpStatus.CONFLICT,
                 "Project is not in a retryable state. Step '" + currentStep +
                 "' must be FAIL (with retryCount <= " + maxRetryCount +
@@ -346,15 +419,19 @@ public class PipelineService {
 
         if (project.getStep() == thisStep && project.getStepStatus() == StepStatus.SUCCESS) {
             // Idempotent — step already done, return 200 with current state
+            log.info("[Service] Claim no-op (already SUCCESS): projectId={}, step={}", projectId, thisStep);
             return toDetail(project);
         }
 
         if (project.getStep() == thisStep && project.getStepStatus() == StepStatus.RUNNING) {
+            log.warn("[Service] Claim conflict (already RUNNING): projectId={}, step={}", projectId, thisStep);
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Step '" + thisStep + "' is already running. Poll GET /api/v1/{id} for current status.");
         }
 
         // Wrong order or any other mismatch — distinct message from the RUNNING case
+        log.warn("[Service] Claim conflict (wrong order / not ready): projectId={}, step={}, currentStep={}, currentStepStatus={}",
+                projectId, thisStep, project.getStep(), project.getStepStatus());
         throw new ResponseStatusException(HttpStatus.CONFLICT,
                 "Step '" + thisStep + "' is not ready. Current state: step=" + project.getStep() +
                 ", stepStatus=" + project.getStepStatus() + ". Complete prior steps first.");
@@ -366,14 +443,18 @@ public class PipelineService {
 
     private Project findProjectOrThrow(UUID projectId) {
         return projectRepository.findById(projectId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Project not found: " + projectId));
+                .orElseThrow(() -> {
+                    log.warn("[Service] Project not found: projectId={}", projectId);
+                    return new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found: " + projectId);
+                });
     }
 
     private String readBookText(Project project) {
         try {
             return Files.readString(Path.of(project.getBookTextPath()), StandardCharsets.UTF_8);
         } catch (Exception e) {
+            log.error("[Service] Failed to read book text: projectId={}, path={}, error={}",
+                    project.getId(), project.getBookTextPath(), e.getMessage(), e);
             throw new RuntimeException("Failed to read book text for project " + project.getId(), e);
         }
     }

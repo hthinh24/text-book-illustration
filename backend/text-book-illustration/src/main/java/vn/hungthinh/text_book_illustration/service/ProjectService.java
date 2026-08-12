@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import vn.hungthinh.text_book_illustration.config.AppProperties;
 import vn.hungthinh.text_book_illustration.dto.response.CharacterResponse;
 import vn.hungthinh.text_book_illustration.dto.response.ChapterResponse;
@@ -30,6 +31,7 @@ import vn.hungthinh.text_book_illustration.repository.UserRepository;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ProjectService {
 
     private final UserRepository userRepository;
@@ -46,10 +48,14 @@ public class ProjectService {
                                              String title,
                                              String text,
                                              MultipartFile file) {
+        log.info("[Service] Starting initProject: userId={}, title={}", userId, title);
+
         boolean hasText = text != null && !text.isBlank();
         boolean hasFile = file != null && !file.isEmpty();
 
         if (hasText == hasFile) {
+            log.warn("[Service] initProject failed validation: userId={}, title={}, hasText={}, hasFile={}",
+                    userId, title, hasText, hasFile);
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Exactly one of 'text' or 'file' must be provided, not both and not neither.");
         }
@@ -59,7 +65,7 @@ public class ProjectService {
         Path bookTextPath = writeBookText(projectId, bookText);
 
         try {
-            return transactionTemplate.execute(status -> {
+            ProjectDetailResponse response = transactionTemplate.execute(status -> {
                 User user = userRepository.getReferenceById(userId);
                 Project project = new Project();
                 project.setId(projectId);
@@ -69,7 +75,10 @@ public class ProjectService {
                 projectRepository.save(project);
                 return toDetail(project);
             });
+            log.info("[Service] Finished initProject: projectId={}, userId={}", projectId, userId);
+            return response;
         } catch (Exception e) {
+            log.error("[Service] initProject failed: projectId={}, userId={}, error={}", projectId, userId, e.getMessage(), e);
             // DB transaction failed — delete the orphan file so disk and DB stay in sync.
             deleteQuietly(bookTextPath);
             throw e;
@@ -83,8 +92,9 @@ public class ProjectService {
 
     @Transactional(readOnly = true)
     public List<ProjectSummaryResponse> listProjects(UUID userId) {
+        log.info("[Service] Starting listProjects: userId={}", userId);
         User user = findUserOrThrow(userId);
-        return projectRepository.findByUser(user).stream()
+        List<ProjectSummaryResponse> result = projectRepository.findByUser(user).stream()
                 .map(p -> new ProjectSummaryResponse(
                         p.getId(),
                         p.getTitle(),
@@ -93,6 +103,8 @@ public class ProjectService {
                         p.getStepStatus(),
                         p.getCreatedAt()))
                 .toList();
+        log.info("[Service] Finished listProjects: userId={}, count={}", userId, result.size());
+        return result;
     }
 
     // ------------------------------------------------------------------ //
@@ -101,8 +113,12 @@ public class ProjectService {
 
     @Transactional(readOnly = true)
     public ProjectDetailResponse getProject(UUID projectId) {
+        log.info("[Service] Starting getProject: projectId={}", projectId);
         Project project = findProjectOrThrow(projectId);
-        return toDetail(project);
+        ProjectDetailResponse result = toDetail(project);
+        log.info("[Service] Finished getProject: projectId={}, step={}, stepStatus={}",
+                projectId, result.step(), result.stepStatus());
+        return result;
     }
 
     // ------------------------------------------------------------------ //
@@ -111,10 +127,14 @@ public class ProjectService {
 
     @Transactional(readOnly = true)
     public String getBookText(UUID projectId) {
+        log.info("[Service] Starting getBookText: projectId={}", projectId);
         Project project = findProjectOrThrow(projectId);
         try {
-            return Files.readString(Path.of(project.getBookTextPath()), StandardCharsets.UTF_8);
+            String content = Files.readString(Path.of(project.getBookTextPath()), StandardCharsets.UTF_8);
+            log.info("[Service] Finished getBookText: projectId={}, length={}", projectId, content.length());
+            return content;
         } catch (IOException e) {
+            log.error("[Service] getBookText failed: projectId={}, error={}", projectId, e.getMessage(), e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Could not read book text file: " + e.getMessage());
         }
@@ -126,20 +146,25 @@ public class ProjectService {
 
     private User findUserOrThrow(UUID userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "User not found: " + userId));
+                .orElseThrow(() -> {
+                    log.warn("[Service] User not found: userId={}", userId);
+                    return new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + userId);
+                });
     }
 
     private Project findProjectOrThrow(UUID projectId) {
         return projectRepository.findById(projectId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Project not found: " + projectId));
+                .orElseThrow(() -> {
+                    log.warn("[Service] Project not found: projectId={}", projectId);
+                    return new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found: " + projectId);
+                });
     }
 
     private String readMultipart(MultipartFile file) {
         try {
             return new String(file.getBytes(), StandardCharsets.UTF_8);
         } catch (IOException e) {
+            log.error("[Service] Failed to read multipart file: fileName={}, error={}", file.getOriginalFilename(), e.getMessage(), e);
             throw new UncheckedIOException("Failed to read uploaded file", e);
         }
     }
@@ -157,6 +182,7 @@ public class ProjectService {
             Files.writeString(file, bookText, StandardCharsets.UTF_8);
             return file;
         } catch (IOException e) {
+            log.error("[Service] Failed to write book text: projectId={}, error={}", projectId, e.getMessage(), e);
             throw new UncheckedIOException("Failed to write book text to disk", e);
         }
     }
@@ -164,8 +190,8 @@ public class ProjectService {
     private void deleteQuietly(Path path) {
         try {
             Files.deleteIfExists(path);
-        } catch (IOException ignored) {
-            // best-effort: log this in a real system but don't mask the original exception
+        } catch (IOException e) {
+            log.warn("[Service] Failed to delete file quietly: path={}, error={}", path, e.getMessage());
         }
     }
 

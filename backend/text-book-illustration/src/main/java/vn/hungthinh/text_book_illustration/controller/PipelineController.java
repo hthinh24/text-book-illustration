@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import vn.hungthinh.text_book_illustration.dto.request.StyleRequest;
 import vn.hungthinh.text_book_illustration.dto.response.ProjectDetailResponse;
 import vn.hungthinh.text_book_illustration.dto.response.RetryResponse;
@@ -20,6 +21,7 @@ import vn.hungthinh.text_book_illustration.service.PipelineService;
 @RestController
 @RequestMapping("/api/v1/projects")
 @RequiredArgsConstructor
+@Slf4j
 public class PipelineController {
 
     private final PipelineService pipelineService;
@@ -34,6 +36,8 @@ public class PipelineController {
             @PathVariable UUID id,
             @RequestBody(required = false) StyleRequest request) {
 
+        log.info("[Controller] triggerStyle called: projectId={}, hasUserStyle={}",
+                id, request != null && request.hasUserStyle());
         ProjectDetailResponse response = pipelineService.triggerStyle(id, request);
         return toStepResponse(response);
     }
@@ -43,6 +47,7 @@ public class PipelineController {
      */
     @PostMapping("/{id}/character")
     public ResponseEntity<ProjectDetailResponse> triggerCharacter(@PathVariable UUID id) {
+        log.info("[Controller] triggerCharacter called: projectId={}", id);
         return toStepResponse(pipelineService.triggerCharacter(id));
     }
 
@@ -51,6 +56,7 @@ public class PipelineController {
      */
     @PostMapping("/{id}/portraits")
     public ResponseEntity<ProjectDetailResponse> triggerPortraits(@PathVariable UUID id) {
+        log.info("[Controller] triggerPortraits called: projectId={}", id);
         return toStepResponse(pipelineService.triggerPortraits(id));
     }
 
@@ -59,6 +65,7 @@ public class PipelineController {
      */
     @PostMapping("/{id}/chapters")
     public ResponseEntity<ProjectDetailResponse> triggerChapters(@PathVariable UUID id) {
+        log.info("[Controller] triggerChapters called: projectId={}", id);
         return toStepResponse(pipelineService.triggerChapters(id));
     }
 
@@ -67,6 +74,7 @@ public class PipelineController {
      */
     @PostMapping("/{id}/illustrations")
     public ResponseEntity<ProjectDetailResponse> triggerIllustrations(@PathVariable UUID id) {
+        log.info("[Controller] triggerIllustrations called: projectId={}", id);
         return toStepResponse(pipelineService.triggerIllustrations(id));
     }
 
@@ -77,6 +85,7 @@ public class PipelineController {
      */
     @PostMapping("/{id}/retry")
     public ResponseEntity<RetryResponse> retry(@PathVariable UUID id) {
+        log.info("[Controller] retry called: projectId={}", id);
         return ResponseEntity.ok(pipelineService.retry(id));
     }
 
