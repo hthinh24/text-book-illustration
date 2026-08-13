@@ -59,7 +59,7 @@ public class PipelineService {
 
         if (hasUserStyle) {
             // No external call — finalize inline; still returns 202 per spec
-            finalizeStyleSuccess(projectId, request.style(), "user-supplied");
+            finalizeStyleSuccess(projectId, request.style(), null);
         } else {
             executeStyleAsync(projectId);
         }

@@ -7,7 +7,7 @@ export function ChapterCard({ chapter }) {
     if (status === 'DONE' && illustrationImagePath) {
       return (
         <img
-          src={illustrationImagePath}
+          src={`${import.meta.env.VITE_CDN_BASE_URL}${illustrationImagePath}`}
           alt={title || 'Chapter Illustration'}
           className="entity-card-image chapter"
           onError={(e) => {

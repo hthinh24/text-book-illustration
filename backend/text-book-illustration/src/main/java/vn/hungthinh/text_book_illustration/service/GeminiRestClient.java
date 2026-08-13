@@ -193,7 +193,7 @@ public class GeminiRestClient implements GeminiClient {
 
     private String copyMockImage(String resourcePath, String subfolder, UUID entityId) {
         try {
-            Path outputDir = Path.of("/portraits", subfolder);
+            Path outputDir = Path.of(appProperties.getFileStorageRoot(), subfolder);
             Files.createDirectories(outputDir);
             Path outputFile = outputDir.resolve(entityId + ".png");
 
@@ -208,7 +208,11 @@ public class GeminiRestClient implements GeminiClient {
                     writePlaceholderPng(outputFile);
                 }
             }
-            return outputFile.toAbsolutePath().toString();
+
+            String root = appProperties.getFileStorageRoot().replace("./", "").replace(".\\", "");
+            if (root.startsWith("/")) root = root.substring(1);
+
+            return "/" + root + "/" + subfolder + "/" + entityId + ".png";
         } catch (IOException e) {
             log.error("[Service] Failed to copy mock image: entityId={}, subfolder={}, error={}", entityId, subfolder, e.getMessage(), e);
             throw new RuntimeException("Failed to copy mock image: " + e.getMessage(), e);

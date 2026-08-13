@@ -21,11 +21,6 @@ public class WebConfig implements WebMvcConfigurer {
         Path uploadPath = Paths.get(appProperties.getFileStorageRoot()).toAbsolutePath().normalize();
         String uploadUri = uploadPath.toUri().toString();
 
-        System.out.println("==================================================");
-        System.out.println("[DEBUG] Absolute Storage Path: " + uploadPath.toString());
-        System.out.println("[DEBUG] Resource Location URI: " + uploadPath.toUri().toString());
-        System.out.println("==================================================");
-
         registry.addResourceHandler("/data/**")
                 .addResourceLocations(uploadUri);
     }

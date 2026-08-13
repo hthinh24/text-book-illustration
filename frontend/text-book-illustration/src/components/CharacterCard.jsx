@@ -7,7 +7,7 @@ export function CharacterCard({ character }) {
     if (status === 'DONE' && portraitImagePath) {
       return (
         <img
-          src={portraitImagePath}
+          src={`${import.meta.env.VITE_CDN_BASE_URL}${portraitImagePath}`}
           alt={name}
           className="entity-card-image"
           onError={(e) => {
