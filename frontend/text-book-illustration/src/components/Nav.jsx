@@ -22,7 +22,7 @@ export function Nav() {
       </Link>
 
       <div className="nav-notice-badge" title="Image generation currently uses sample assets due to API billing restrictions">
-        <span className="notice-icon">ℹ</span> Image generation uses mock assets
+        <span className="notice-icon">ℹ</span> Image generation uses mock assets from backend
       </div>
 
       {user && (
