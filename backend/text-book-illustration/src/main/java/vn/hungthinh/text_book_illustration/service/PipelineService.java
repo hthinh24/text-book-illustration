@@ -399,9 +399,17 @@ public class PipelineService {
             return response;
         }
 
-        // Neither path matched — project is not in a retryable state
+        // Neither path matched — re-query project state to differentiate RETRY_EXHAUSTED from other conflict reasons
+        Project fresh = findProjectOrThrow(projectId);
+        if (fresh.getStepStatus() == StepStatus.FAIL && fresh.getRetryCount() >= maxRetryCount) {
+            log.warn("[Service] Retry exhausted: projectId={}, step={}, retryCount={}, maxRetryCount={}",
+                    projectId, currentStep, fresh.getRetryCount(), maxRetryCount);
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "RETRY_EXHAUSTED: Retry limit reached for step '" + currentStep + "' (" + fresh.getRetryCount() + "/" + maxRetryCount + ").");
+        }
+
         log.warn("[Service] Retry rejected (not in retryable state): projectId={}, step={}, stepStatus={}, retryCount={}",
-                projectId, currentStep, project.getStepStatus(), project.getRetryCount());
+                projectId, currentStep, fresh.getStepStatus(), fresh.getRetryCount());
         throw new ResponseStatusException(HttpStatus.CONFLICT,
                 "Project is not in a retryable state. Step '" + currentStep +
                 "' must be FAIL (with retryCount <= " + maxRetryCount +

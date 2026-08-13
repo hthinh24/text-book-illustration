@@ -64,6 +64,7 @@ button, input, select, textarea {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: relative;
 }
 
 .gd-header-brand {
@@ -89,6 +90,30 @@ button, input, select, textarea {
   background: var(--bg-3);
   padding: 4px 8px;
   border-radius: var(--r-1);
+}
+
+.nav-notice-badge {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
+  color: #D84315;
+  font-size: 12px;
+  font-weight: var(--fw-semi);
+  padding: 5px 14px;
+  border-radius: var(--r-pill);
+  border: 1px solid #FFB74D;
+  box-shadow: 0 1px 3px rgba(255, 107, 0, 0.12);
+  white-space: nowrap;
+}
+
+.nav-notice-badge .notice-icon {
+  font-weight: var(--fw-bold);
+  color: #E65100;
+  font-size: 13px;
 }
 
 .gd-user-menu {

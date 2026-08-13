@@ -41,12 +41,15 @@ describe('NewProjectPage', () => {
     fireEvent.click(submitBtn);
 
     expect(await screen.findByText('Project title is required')).toBeInTheDocument();
-    expect(await screen.findByText('Book text is required')).toBeInTheDocument();
+    expect(await screen.findByText('Please select a .txt file')).toBeInTheDocument();
     expect(initProject).not.toHaveBeenCalled();
   });
 
   it('enforces input mode mutual exclusivity when switching tabs', async () => {
     renderNewProjectPage();
+
+    const textTabBtn = screen.getByRole('tab', { name: /paste text/i });
+    fireEvent.click(textTabBtn);
 
     const textarea = screen.getByPlaceholderText(/paste the book text here/i);
     fireEvent.change(textarea, { target: { value: 'Once upon a time...' } });
@@ -58,7 +61,6 @@ describe('NewProjectPage', () => {
     expect(screen.queryByPlaceholderText(/paste the book text here/i)).not.toBeInTheDocument();
     expect(screen.getByText(/choose a .txt file/i)).toBeInTheDocument();
 
-    const textTabBtn = screen.getByRole('tab', { name: /paste text/i });
     fireEvent.click(textTabBtn);
 
     const reOpenedTextarea = screen.getByPlaceholderText(/paste the book text here/i);
@@ -72,6 +74,9 @@ describe('NewProjectPage', () => {
     });
 
     renderNewProjectPage();
+
+    const textTabBtn = screen.getByRole('tab', { name: /paste text/i });
+    fireEvent.click(textTabBtn);
 
     const titleInput = screen.getByLabelText(/project title/i);
     const textarea = screen.getByPlaceholderText(/paste the book text here/i);

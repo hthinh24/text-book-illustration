@@ -9,7 +9,7 @@ import {
   triggerIllustrations,
   retryStep,
 } from '../api/client';
-import { getActionableStep } from '../utils/pipelineSteps';
+import { getActionableStep, isProjectComplete } from '../utils/pipelineSteps';
 import { usePolling } from '../hooks/usePolling';
 import { Stepper } from '../components/Stepper';
 import { StepPanel } from '../components/StepPanel';
@@ -49,9 +49,15 @@ export function ProjectDetailPage() {
     ? getActionableStep(project.step, project.stepStatus)
     : { stepName: 'STYLE', stepStatus: 'PENDING' };
 
-  // Enable polling while step is RUNNING
+  const complete = project ? isProjectComplete(project.step, project.stepStatus) : false;
   const isRunning = project?.stepStatus === 'RUNNING' || actionableStep.stepStatus === 'RUNNING';
-  usePolling(fetchDetail, { intervalMs: 2500, enabled: isRunning });
+
+  // Fix 2: Enable polling for any open project while not complete.
+  // Fast poll (2.5s) when RUNNING, background sync poll (3.5s) when PENDING/FAIL to sync across browser tabs
+  usePolling(fetchDetail, {
+    intervalMs: isRunning ? 2500 : 3500,
+    enabled: !!project && !complete,
+  });
 
   const handleTriggerStyle = async (userStyle) => {
     setIsActionLoading(true);
@@ -105,6 +111,8 @@ export function ProjectDetailPage() {
       const { project: freshProject, retryReason } = result || {};
       if (retryReason === 'STUCK_TIMEOUT') {
         setRetryNotice('Step was stuck and has been reset to retry.');
+      } else if (retryReason === 'RETRY_EXHAUSTED') {
+        setRetryNotice('RETRY_EXHAUSTED: Retry limit reached for this step.');
       } else {
         setRetryNotice('Step failed and has been reset to retry.');
       }
@@ -114,7 +122,11 @@ export function ProjectDetailPage() {
         await fetchDetail();
       }
     } catch (err) {
-      setError(err.message || 'Failed to retry step.');
+      if (err.message && err.message.includes('RETRY_EXHAUSTED')) {
+        setRetryNotice('RETRY_EXHAUSTED: Retry limit reached for this step.');
+      } else {
+        setError(err.message || 'Failed to retry step.');
+      }
     } finally {
       setIsActionLoading(false);
     }

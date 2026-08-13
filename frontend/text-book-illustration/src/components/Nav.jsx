@@ -21,6 +21,10 @@ export function Nav() {
         <span className="gd-header-badge">Projects</span>
       </Link>
 
+      <div className="nav-notice-badge" title="Image generation currently uses sample assets due to API billing restrictions">
+        <span className="notice-icon">ℹ</span> Image generation uses mock assets
+      </div>
+
       {user && (
         <div className="gd-user-menu">
           <div className="gd-avatar" title={user.name}>

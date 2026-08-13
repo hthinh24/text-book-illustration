@@ -204,4 +204,30 @@ describe('ProjectDetailPage', () => {
     expect(screen.getByText('PORTRAIT PENDING')).toBeInTheDocument();
     expect(screen.getByAltText('Alice')).toHaveAttribute('src', 'http://localhost:8080/data/portraits/2244b005-7fac-4941-9b97-b6c3053a07fa.png');
   });
+
+  it('hides retry button and displays terminal notice when retry is exhausted', async () => {
+    getProjectDetail.mockResolvedValueOnce({
+      projectId: 'proj-123',
+      title: 'Alice in Wonderland',
+      createdAt: '2026-08-10T10:00:00Z',
+      status: 'IN_PROGRESS',
+      step: 'CHARACTER',
+      stepStatus: 'FAIL',
+      errorMessage: 'Gemini quota exceeded',
+      characters: [],
+      chapters: [],
+    });
+
+    retryStep.mockRejectedValueOnce(new Error('RETRY_EXHAUSTED: Retry limit reached for step CHARACTER (10/10).'));
+
+    renderProjectDetailPage();
+
+    expect(await screen.findByText(/Gemini quota exceeded/i)).toBeInTheDocument();
+
+    const retryBtn = screen.getByRole('button', { name: /retry step/i });
+    fireEvent.click(retryBtn);
+
+    expect(await screen.findByText(/This step has failed too many times and can't be retried automatically/i)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /retry step/i })).not.toBeInTheDocument();
+  });
 });

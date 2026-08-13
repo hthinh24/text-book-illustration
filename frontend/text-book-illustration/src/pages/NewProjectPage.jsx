@@ -10,7 +10,7 @@ export function NewProjectPage() {
   const navigate = useNavigate();
 
   const [title, setTitle] = useState('');
-  const [activeTab, setActiveTab] = useState('text'); // 'text' | 'file'
+  const [activeTab, setActiveTab] = useState('file'); // 'text' | 'file'
   const [text, setText] = useState('');
   const [file, setFile] = useState(null);
 
@@ -106,22 +106,22 @@ export function NewProjectPage() {
               <button
                 type="button"
                 role="tab"
-                aria-selected={activeTab === 'text'}
-                className={`tab-btn ${activeTab === 'text' ? 'active' : ''}`}
-                onClick={() => handleTabChange('text')}
-                disabled={isLoading}
-              >
-                Paste text
-              </button>
-              <button
-                type="button"
-                role="tab"
                 aria-selected={activeTab === 'file'}
                 className={`tab-btn ${activeTab === 'file' ? 'active' : ''}`}
                 onClick={() => handleTabChange('file')}
                 disabled={isLoading}
               >
                 Upload .txt file
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === 'text'}
+                className={`tab-btn ${activeTab === 'text' ? 'active' : ''}`}
+                onClick={() => handleTabChange('text')}
+                disabled={isLoading}
+              >
+                Paste text
               </button>
             </div>
 
