@@ -17,3 +17,9 @@ Cost: Need to maintain migration scripts for every entity change.
 Claude recommend continue run for remaining items after first item fail because cap character is 2 that can help user reduce their round trip.
 I push back because currently why only use one model per text / image generation, single model per type mean share failure mode, for ex: If the first item fail because rate limit, out of quote, model downing then the next item almost certainly will hit the same error, keep continue didn`t bring any value.
 Cost: worse UX for case that can be success, the user gets a partial result instead of a full one in a single round trip. If item #1 fails (For ex: timeout) but item #2 would have actually succeeded, aborting early mean the user has to retry instead of getting both outcomes at once.
+
+5. Image generation mocked due to billing blocker
+Nano Banana 2 (`gemini-3.1-flash-image`) has zero free-tier quota — confirmed via both google colab & direct API calls. Billing would fix it, but Google doesn't accept JCB; no supported card was available in time. Gradion approved a clearly-flagged mocked fallback for image generation only — text steps still call the real API.
+**Flag:** all portrait/illustration images in this submission are mocked (sample images bundled in repo), not generated.
+**Cost:** the real failure modes of the image API (quota exceeded, malformed prompt, timeout, invalid `previous_interaction_id`) are never actually exercised against a live response in this submission — so `GeminiRestClient`'s error-handling path for those two methods is unverified by anything except assumption.
+**Mitigation:** wrote dedicated unit tests against `GeminiRestClient` that simulate the exact real error shapes already seen (429 quota-exceeded body, network timeout) to verify the error-mapping path works correctly, without depending on a live quota wall to prove it.
