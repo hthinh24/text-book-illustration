@@ -15,3 +15,16 @@ export function completedStepCount(step, stepStatus) {
   if (idx === -1) return 0;
   return idx + (stepStatus === 'SUCCESS' ? 1 : 0);
 }
+
+export function getActionableStep(step, stepStatus) {
+  const idx = STEPS.indexOf(step);
+  if (idx === -1) return { stepName: STEPS[0], stepStatus: 'PENDING' };
+  if (stepStatus === 'SUCCESS' && idx < STEPS.length - 1) {
+    return { stepName: STEPS[idx + 1], stepStatus: 'PENDING' };
+  }
+  return { stepName: step, stepStatus };
+}
+
+export function isProjectComplete(step, stepStatus) {
+  return step === STEPS[STEPS.length - 1] && stepStatus === 'SUCCESS';
+}
