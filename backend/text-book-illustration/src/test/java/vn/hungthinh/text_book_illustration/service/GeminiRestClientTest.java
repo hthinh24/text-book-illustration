@@ -44,7 +44,7 @@ class GeminiRestClientTest {
         RestClient restClient = restClientBuilder.build();
 
         appProperties = new AppProperties();
-        appProperties.setFileStorageRoot(tempDir.toString());
+        appProperties.setFileStorageRoot("data");
         appProperties.getGemini().setApiKey("test-key");
         appProperties.getGemini().setBaseUrl("https://generativelanguage.googleapis.com/v1beta");
         appProperties.getGemini().setApiRevision("2026-05-20");
@@ -217,10 +217,7 @@ class GeminiRestClientTest {
                 characterId, "Alice", "Portrait of Alice", "prev-123");
 
         assertThat(result.interactionId()).isEqualTo("prev-123");
-        Path generatedFile = Path.of(result.value());
-        assertThat(Files.exists(generatedFile)).isTrue();
-        assertThat(generatedFile.getFileName().toString()).isEqualTo(characterId + ".png");
-        assertThat(generatedFile.getParent().getFileName().toString()).isEqualTo("portraits");
+        assertThat(result.value()).isEqualTo("/data/portraits/" + characterId + ".png");
     }
 
     @Test
@@ -231,9 +228,6 @@ class GeminiRestClientTest {
                 chapterId, "Illustration of village", "prev-456");
 
         assertThat(result.interactionId()).isEqualTo("prev-456");
-        Path generatedFile = Path.of(result.value());
-        assertThat(Files.exists(generatedFile)).isTrue();
-        assertThat(generatedFile.getFileName().toString()).isEqualTo(chapterId + ".png");
-        assertThat(generatedFile.getParent().getFileName().toString()).isEqualTo("illustrations");
+        assertThat(result.value()).isEqualTo("/data/illustrations/" + chapterId + ".png");
     }
 }

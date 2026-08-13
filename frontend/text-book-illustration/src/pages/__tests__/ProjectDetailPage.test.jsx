@@ -183,7 +183,7 @@ describe('ProjectDetailPage', () => {
           id: 'char-1',
           name: 'Alice',
           imagePrompt: 'Young girl in blue dress',
-          portraitImagePath: '/images/alice.png',
+          portraitImagePath: '/data/portraits/2244b005-7fac-4941-9b97-b6c3053a07fa.png',
           status: 'DONE',
         },
         {
@@ -202,6 +202,6 @@ describe('ProjectDetailPage', () => {
     expect(await screen.findByText('Alice')).toBeInTheDocument();
     expect(screen.getByText('Mad Hatter')).toBeInTheDocument();
     expect(screen.getByText('PORTRAIT PENDING')).toBeInTheDocument();
-    expect(screen.getByAltText('Alice')).toHaveAttribute('src', '/images/alice.png');
+    expect(screen.getByAltText('Alice')).toHaveAttribute('src', 'http://localhost:8080/data/portraits/2244b005-7fac-4941-9b97-b6c3053a07fa.png');
   });
 });
