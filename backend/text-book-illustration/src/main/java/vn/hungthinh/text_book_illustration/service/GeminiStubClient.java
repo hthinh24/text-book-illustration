@@ -22,7 +22,7 @@ public class GeminiStubClient implements GeminiClient {
     }
 
     @Override
-    public Result<List<CharacterData>> generateCharacters(String bookText, String previousInteractionId) {
+    public Result<List<CharacterData>> generateCharacters(String previousInteractionId) {
         sleep();
         return new Result<>(
                 List.of(
@@ -39,7 +39,7 @@ public class GeminiStubClient implements GeminiClient {
     }
 
     @Override
-    public Result<List<ChapterData>> generateChapters(String bookText, String style, String previousInteractionId) {
+    public Result<List<ChapterData>> generateChapters(String style, String previousInteractionId) {
         sleep();
         return new Result<>(
                 List.of(new ChapterData("A serene village bathed in golden morning light, as the story begins")),

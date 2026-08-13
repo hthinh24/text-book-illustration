@@ -58,6 +58,14 @@ export function StepPanel({
     );
   }
 
+  const getCleanErrorMessage = (msg) => {
+    if (!msg) return 'An error occurred while generating this step.';
+    if (msg.includes('extracting response') || msg.includes('application/octet-stream') || msg.includes('content type')) {
+      return 'Gemini API connection timed out or returned an invalid response format.';
+    }
+    return msg;
+  };
+
   // Handle FAIL state
   if (project.stepStatus === 'FAIL') {
     const exhausted = isRetryExhausted || retryNotice?.includes('RETRY_EXHAUSTED');
@@ -73,7 +81,7 @@ export function StepPanel({
           Step failed: {ACTION_LABELS[stepName] || stepName}
         </div>
         <p style={{ fontSize: '14px', color: 'var(--fg-1)', marginBottom: 'var(--sp-4)' }}>
-          {project.errorMessage || 'An error occurred while generating this step.'}
+          {getCleanErrorMessage(project.errorMessage)}
         </p>
 
         {exhausted ? (

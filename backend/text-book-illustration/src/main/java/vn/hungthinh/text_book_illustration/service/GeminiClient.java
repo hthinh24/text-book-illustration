@@ -23,7 +23,7 @@ public interface GeminiClient {
     /**
      * Extract characters from the book text. The service layer caps the result at 2.
      */
-    Result<List<CharacterData>> generateCharacters(String bookText, String previousInteractionId);
+    Result<List<CharacterData>> generateCharacters(String previousInteractionId);
 
     /**
      * Generate a portrait image path for a single character.
@@ -35,7 +35,7 @@ public interface GeminiClient {
     /**
      * Extract chapters from the book text. The service layer caps the result at 1.
      */
-    Result<List<ChapterData>> generateChapters(String bookText, String style, String previousInteractionId);
+    Result<List<ChapterData>> generateChapters(String style, String previousInteractionId);
 
     /**
      * Generate an illustration image path for a single chapter.

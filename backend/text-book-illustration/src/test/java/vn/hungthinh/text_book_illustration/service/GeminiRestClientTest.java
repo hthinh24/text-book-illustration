@@ -110,7 +110,7 @@ class GeminiRestClientTest {
                 .andRespond(withSuccess(mockResponseBody, MediaType.APPLICATION_JSON));
 
         GeminiClient.Result<List<GeminiClient.CharacterData>> result =
-                geminiRestClient.generateCharacters("Some story text", "interaction-123");
+                geminiRestClient.generateCharacters("interaction-123");
 
         mockServer.verify();
         assertThat(result.interactionId()).isEqualTo("interaction-456");
@@ -145,7 +145,7 @@ class GeminiRestClientTest {
                 .andRespond(withSuccess(mockResponseBody, MediaType.APPLICATION_JSON));
 
         GeminiClient.Result<List<GeminiClient.ChapterData>> result =
-                geminiRestClient.generateChapters("Some story text", "Watercolor style", "interaction-456");
+                geminiRestClient.generateChapters("Watercolor style", "interaction-456");
 
         mockServer.verify();
         assertThat(result.interactionId()).isEqualTo("interaction-789");

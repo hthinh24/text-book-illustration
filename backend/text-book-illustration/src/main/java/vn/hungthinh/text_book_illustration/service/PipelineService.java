@@ -126,9 +126,8 @@ public class PipelineService {
         log.info("[Service] Starting executeCharacterAsync: projectId={}", projectId);
         Project project = findProjectOrThrow(projectId);
         try {
-            String bookText = readBookText(project);
             GeminiClient.Result<List<GeminiClient.CharacterData>> result =
-                    geminiClient.generateCharacters(bookText, project.getPreviousInteractionId());
+                    geminiClient.generateCharacters(project.getPreviousInteractionId());
 
             // Cap at 2 — truncate silently if Gemini returns more
             List<GeminiClient.CharacterData> chars = result.value().stream().limit(2).toList();
@@ -258,9 +257,8 @@ public class PipelineService {
         log.info("[Service] Starting executeChaptersAsync: projectId={}", projectId);
         Project project = findProjectOrThrow(projectId);
         try {
-            String bookText = readBookText(project);
             GeminiClient.Result<List<GeminiClient.ChapterData>> result =
-                    geminiClient.generateChapters(bookText, project.getStyle(), project.getPreviousInteractionId());
+                    geminiClient.generateChapters(project.getStyle(), project.getPreviousInteractionId());
 
             // Cap at 1 — truncate silently if Gemini returns more
             List<GeminiClient.ChapterData> chaps = result.value().stream().limit(1).toList();

@@ -67,11 +67,11 @@ public class GeminiRestClient implements GeminiClient {
     }
 
     @Override
-    public Result<List<CharacterData>> generateCharacters(String bookText, String previousInteractionId) {
+    public Result<List<CharacterData>> generateCharacters(String previousInteractionId) {
         log.info("[Service] generateCharacters: calling Gemini API");
         String prompt = "Extract up to 2 main characters from this book text. "
                 + "For each character provide their name and a detailed image prompt suitable "
-                + "for portrait illustration. Return as JSON.\n\nBook text:\n" + bookText;
+                + "for portrait illustration. Return as JSON.";
 
         InteractionResult result = callGemini(prompt, previousInteractionId, characterResponseFormat());
         try {
@@ -88,11 +88,11 @@ public class GeminiRestClient implements GeminiClient {
     }
 
     @Override
-    public Result<List<ChapterData>> generateChapters(String bookText, String style, String previousInteractionId) {
+    public Result<List<ChapterData>> generateChapters(String style, String previousInteractionId) {
         log.info("[Service] generateChapters: calling Gemini API");
         String prompt = "Identify 1 key dramatic scene from this book text that would make a compelling illustration. "
                 + "Write a detailed illustration prompt in the visual style: '" + style + "'."
-                + " Return as JSON.\n\nBook text:\n" + bookText;
+                + " Return as JSON.";
 
         InteractionResult result = callGemini(prompt, previousInteractionId, chapterResponseFormat());
         try {
@@ -172,6 +172,13 @@ public class GeminiRestClient implements GeminiClient {
         } catch (ResourceAccessException e) {
             log.error("[Service] Gemini API network error: {}", e.getMessage(), e);
             throw new RuntimeException("Gemini API network error: " + e.getMessage(), e);
+
+        } catch (Exception e) {
+            log.error("[Service] Gemini API response error: {}", e.getMessage(), e);
+            if (e.getMessage() != null && (e.getMessage().contains("extracting response") || e.getMessage().contains("content type"))) {
+                throw new RuntimeException("Gemini API returned an invalid response or connection timed out.", e);
+            }
+            throw new RuntimeException("Gemini API request failed: " + e.getMessage(), e);
         }
     }
 
