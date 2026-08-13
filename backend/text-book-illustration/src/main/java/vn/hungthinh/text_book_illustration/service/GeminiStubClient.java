@@ -3,15 +3,13 @@ package vn.hungthinh.text_book_illustration.service;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 /**
- * Stub Gemini client for Task 05 — returns canned data after a short delay.
- * Marked @Primary so it wins over any future real implementation until Task 06
- * swaps it by removing @Primary and providing GeminiRestClient.
+ * Stub Gemini client — returns canned data after a short delay.
+ * Used in tests (wired directly via constructor injection).
+ * Task 06: @Primary removed — GeminiRestClient is now the production bean.
  */
-@Primary
 @Service
 public class GeminiStubClient implements GeminiClient {
 
@@ -34,11 +32,10 @@ public class GeminiStubClient implements GeminiClient {
     }
 
     @Override
-    public Result<String> generatePortrait(String characterName, String imagePrompt, String previousInteractionId) {
+    public Result<String> generatePortrait(UUID characterId, String characterName, String imagePrompt, String previousInteractionId) {
         sleep();
-        // Stub returns a placeholder path — real client would save the base64 image to disk
-        return new Result<>("portraits/stub-" + characterName.toLowerCase().replace(' ', '_') + ".png",
-                fakeInteractionId());
+        // Stub returns a placeholder path — real client would save the mock image to disk
+        return new Result<>("portraits/stub-" + characterId + ".png", fakeInteractionId());
     }
 
     @Override
@@ -50,9 +47,9 @@ public class GeminiStubClient implements GeminiClient {
     }
 
     @Override
-    public Result<String> generateIllustration(String illustrationPrompt, String previousInteractionId) {
+    public Result<String> generateIllustration(UUID chapterId, String illustrationPrompt, String previousInteractionId) {
         sleep();
-        return new Result<>("illustrations/stub-chapter.png", fakeInteractionId());
+        return new Result<>("illustrations/stub-" + chapterId + ".png", fakeInteractionId());
     }
 
     // ------------------------------------------------------------------ //
@@ -71,3 +68,4 @@ public class GeminiStubClient implements GeminiClient {
         return "stub-" + UUID.randomUUID();
     }
 }
+

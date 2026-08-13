@@ -20,4 +20,17 @@ public class AppProperties {
 
     /** Maximum number of retries allowed per step (inclusive — retry_count must be <= this). */
     private int maxRetryCount = 3;
+
+    /** Gemini API configuration (all under app.gemini.*). */
+    private Gemini gemini = new Gemini();
+
+    @Getter
+    @Setter
+    public static class Gemini {
+        private String apiKey;
+        private String baseUrl = "https://generativelanguage.googleapis.com/v1beta";
+        /** Must be sent as the Api-Revision header — selects the steps[]/model_output response shape. */
+        private String apiRevision = "2026-05-20";
+        private String textModel = "gemini-3.6-flash";
+    }
 }

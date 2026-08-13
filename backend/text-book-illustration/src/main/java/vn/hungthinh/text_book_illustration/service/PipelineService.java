@@ -199,6 +199,7 @@ public class PipelineService {
 
             try {
                 GeminiClient.Result<String> result = geminiClient.generatePortrait(
+                        character.getId(),
                         character.getName(),
                         character.getImagePrompt(),
                         lastInteractionId);
@@ -329,6 +330,7 @@ public class PipelineService {
 
             try {
                 GeminiClient.Result<String> result = geminiClient.generateIllustration(
+                        chapter.getId(),
                         chapter.getIllustrationPrompt(),
                         lastInteractionId);
 

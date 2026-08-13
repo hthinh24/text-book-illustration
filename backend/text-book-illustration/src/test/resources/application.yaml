@@ -2,18 +2,22 @@ app:
   file-storage-root: /tmp/test-storage
   step-timeout-seconds: 180
   max-retry-count: 3
+  gemini:
+    api-key: test-key
+    base-url: https://generativelanguage.googleapis.com/v1beta
+    api-revision: "2026-05-20"
+    text-model: gemini-3.6-flash
 
 server:
   port: 8080
 
 spring:
   datasource:
-    url: jdbc:h2:mem:testdb
+    driver-class-name: org.postgresql.Driver
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/text_book_illustration}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:root}
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: validate
 
-gemini:
-  api-key: stub-key
-  text-model: stub-text
-  image-model: stub-image

@@ -49,7 +49,7 @@ class ProjectControllerTest {
 
         when(projectService.getProject(projectId)).thenReturn(response);
 
-        mockMvc.perform(get("/api/v1/{projectId}", projectId))
+        mockMvc.perform(get("/api/v1/projects/{projectId}", projectId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.projectId").value(projectId.toString()))
                 .andExpect(jsonPath("$.title").value("My Book"))
@@ -66,7 +66,7 @@ class ProjectControllerTest {
         when(projectService.getProject(unknownId))
                 .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found"));
 
-        mockMvc.perform(get("/api/v1/{projectId}", unknownId))
+        mockMvc.perform(get("/api/v1/projects/{projectId}", unknownId))
                 .andExpect(status().isNotFound());
     }
 }

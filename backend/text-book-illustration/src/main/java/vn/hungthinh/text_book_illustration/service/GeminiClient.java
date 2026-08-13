@@ -1,6 +1,7 @@
 package vn.hungthinh.text_book_illustration.service;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Plug point for Gemini AI calls.
@@ -26,8 +27,10 @@ public interface GeminiClient {
 
     /**
      * Generate a portrait image path for a single character.
+     *
+     * @param characterId used for collision-free filename (Character.name is nullable)
      */
-    Result<String> generatePortrait(String characterName, String imagePrompt, String previousInteractionId);
+    Result<String> generatePortrait(UUID characterId, String characterName, String imagePrompt, String previousInteractionId);
 
     /**
      * Extract chapters from the book text. The service layer caps the result at 1.
@@ -36,8 +39,10 @@ public interface GeminiClient {
 
     /**
      * Generate an illustration image path for a single chapter.
+     *
+     * @param chapterId used for collision-free filename
      */
-    Result<String> generateIllustration(String illustrationPrompt, String previousInteractionId);
+    Result<String> generateIllustration(UUID chapterId, String illustrationPrompt, String previousInteractionId);
 
     // ------------------------------------------------------------------ //
     //  Value types                                                         //
