@@ -2,11 +2,13 @@ package vn.hungthinh.text_book_illustration.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestTemplate;
 
 /**
  * Provides a RestTemplate and RestClient configured for Gemini API calls.
+ * Configured with explicit connect and read timeouts to prevent infinite blocking.
  * Kept separate from GeminiRestClient so tests can substitute their own
  * RestTemplate backed by MockRestServiceServer without a Spring context.
  */
@@ -14,12 +16,15 @@ import org.springframework.web.client.RestTemplate;
 public class GeminiClientConfig {
 
     /**
-     * Plain RestTemplate — no custom timeouts; Spring's defaults apply.
+     * RestTemplate configured with 10s connect timeout and 60s read timeout.
      * Exposed as a bean so MockRestServiceServer can attach to it in tests.
      */
     @Bean(name = "geminiRestTemplate")
     RestTemplate geminiRestTemplate() {
-        return new RestTemplate();
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(10_000); // 10 seconds connect timeout
+        factory.setReadTimeout(60_000);    // 60 seconds read timeout
+        return new RestTemplate(factory);
     }
 
     /**
