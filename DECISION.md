@@ -78,3 +78,16 @@ I push back because that change logic from data model, backend and frontend, wit
 
 **Cost:**
 Because we don`t have a proper terminal state or recovery flow for it, user will be stuck at that stage if they hit retry_limit.
+
+---
+
+## 7. What I would do with one more day
+
+**Within scope:**
+
+- **Real Image Model Integration:** Swap the mock images for real Gemini image model calls once billing is sorted out — the code already has a `TODO` marking exactly where to change it, just waiting on a valid Visa/Mastercard card.
+- **Proper Terminal State for Retry Exhaustion:** Build a real terminal state for retry-exhausted. Decision #6 already said this gap, so the next step is adding a clear status (`RETRY_EXHAUSTED`) with recovery path (restart the step), instead leaving user with retry button that will never succeed.
+
+**Outside scope (Production readiness):**
+
+- **Production Infrastructure:** Add basic production component — real auth instead of just email lookup, S3 or a CDN instead of local disk storage. None of this matter for a 3-day take-home, but it makes this project like a real product rather than a simple demo.
