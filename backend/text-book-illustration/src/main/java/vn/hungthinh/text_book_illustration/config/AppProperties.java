@@ -21,6 +21,9 @@ public class AppProperties {
     /** Maximum number of retries allowed per step (inclusive — retry_count must be <= this). */
     private int maxRetryCount = 3;
 
+    /** Allowed CORS origins for resource handlers (e.g. /data/**). */
+    private String corsAllowedOrigins = "http://localhost:5173";
+
     /** Gemini API configuration (all under app.gemini.*). */
     private Gemini gemini = new Gemini();
 
