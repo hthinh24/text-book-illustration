@@ -202,7 +202,8 @@ describe('ProjectDetailPage', () => {
     expect(await screen.findByText('Alice')).toBeInTheDocument();
     expect(screen.getByText('Mad Hatter')).toBeInTheDocument();
     expect(screen.getByText('PORTRAIT PENDING')).toBeInTheDocument();
-    expect(screen.getByAltText('Alice')).toHaveAttribute('src', 'http://localhost:8080/data/portraits/2244b005-7fac-4941-9b97-b6c3053a07fa.png');
+    const cdnBase = import.meta.env.VITE_CDN_BASE_URL || 'http://localhost:8080';
+    expect(screen.getByAltText('Alice')).toHaveAttribute('src', `${cdnBase}/data/portraits/2244b005-7fac-4941-9b97-b6c3053a07fa.png`);
   });
 
   it('hides retry button and displays terminal notice when retry is exhausted', async () => {
