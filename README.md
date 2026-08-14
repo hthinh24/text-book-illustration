@@ -21,16 +21,20 @@ Turns a book's text into style-matched character portraits and chapter illustrat
 
 Copy `.env.example` to `.env` and fill in:
 
-| Variable | Description                                                                              |
-|---|------------------------------------------------------------------------------------------|
-| `APP_GEMINI_API_KEY` | Your Gemini API key                                                                      |
-| `APP_GEMINI_TEXT_MODEL` | Gemini text generation model (default: `gemini-3.1-flash-lite`)                          |
-| `APP_GEMINI_IMAGE_MODEL` | Gemini image generation model (default: `gemini-3.1-flash-image`)                        |
+| Variable | Description |
+| --- | --- |
+| `APP_GEMINI_API_KEY` | Your Gemini API key |
+| `APP_GEMINI_TEXT_MODEL` | Gemini text generation model (default: `gemini-3.1-flash-lite`) |
+| `APP_GEMINI_IMAGE_MODEL` | Gemini image generation model (default: `gemini-3.1-flash-image`) |
+| `SERVER_PORT` | Backend Spring Boot server port (default: `8080`) |
+| `FRONTEND_PORT` | Frontend dev server port (default: `5173`) |
 | `STEP_TIMEOUT_SECONDS` | How long a step can sit `RUNNING` before it's considered stuck and eligible for recovery |
-| `MAX_RETRY_COUNT` | Max retry attempts per step before the retry endpoint stops accepting retries            |
-| `DB_USERNAME`, `DB_PASSWORD`, `DB_NAME`, `DB_PORT` | Postgres database connection details                                                     |
-| `FILE_STORAGE_ROOT` | Local storage root for book text files and generated assets                              |
-| `VITE_API_BASE_URL` | Frontend API base URL (default: `http://localhost:8080/api/v1`)                          |
+| `MAX_RETRY_COUNT` | Max retry attempts per step before the retry endpoint stops accepting retries |
+| `DB_USERNAME`, `DB_PASSWORD`, `DB_NAME`, `DB_PORT` | Postgres database connection details |
+| `FILE_STORAGE_ROOT` | Local storage root for book text files and generated assets |
+| `VITE_API_BASE_URL` | Frontend API base URL (default: `http://localhost:8080/api/v1`) |
+| `VITE_PROXY_TARGET` | Frontend Vite dev server proxy target (default: `http://localhost:${SERVER_PORT}`) |
+| `APP_CORS_ALLOWED_ORIGINS` | Allowed CORS origins for asset server (default: `http://localhost:5173`) |
 
 ## Running the application
 
@@ -39,6 +43,12 @@ Copy `.env.example` to `.env` and fill in:
 ```
 
 Brings up Postgres (via `docker-compose.yml`), starts the Spring Boot backend service, and launches the React/Vite frontend dev server.
+
+### Default Ports & API Contract
+
+- **Frontend Application**: [http://localhost:5173](http://localhost:5173) (default port: `5173`, configured via `FRONTEND_PORT`)
+- **Backend Service**: [http://localhost:8080](http://localhost:8080) (default port: `8080`, configured via `SERVER_PORT`)
+- **Swagger UI / API Contract**: [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
 
 ## Running tests
 
